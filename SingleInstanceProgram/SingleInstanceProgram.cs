@@ -9,7 +9,13 @@ namespace SingleInstanceProgramNS
         private Mutex mutex;
         private static SingleInstanceProgram? instance = null;
 
-
+        /// <summary>
+        /// Creates initial instance of the class. instanceId takes a unique id to be used in named mutex and pipe server. args takes the data to be sent from additional instances of the program to the initial one.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static SingleInstanceProgram GetInstance(string instanceId, string[] args)
         {
             if(instance != null)
@@ -20,6 +26,11 @@ namespace SingleInstanceProgramNS
             return instance;
         }
 
+        /// <summary>
+        /// Returns the previously created instance of the class.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static SingleInstanceProgram GetInstance()
         {
             if (instance == null)
