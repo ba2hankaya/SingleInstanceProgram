@@ -129,12 +129,12 @@ namespace SingleInstanceProgramNS
 
         protected virtual void OnMessageReceivedFromFirstInstance(MessageReceivedEventArgs e)
         {
-            MessageFromFirstInstanceReceived?.Invoke(this, e);
+            MessageReceivedFromFirstInstance?.Invoke(this, e);
         }
 
         public event EventHandler<MessageReceivedEventArgs>? MessageReceivedFromOtherInstance;
 
-        public event EventHandler<MessageReceivedEventArgs>? MessageFromFirstInstanceReceived;
+        public event EventHandler<MessageReceivedEventArgs>? MessageReceivedFromFirstInstance;
     }
 
     public class MessageReceivedEventArgs : EventArgs
