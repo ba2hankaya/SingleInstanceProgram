@@ -19,7 +19,7 @@ namespace SingleInstanceProgramNS
         /// <param name="args"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static SingleInstanceProgram GetInstance(string instanceId, string[] args)
+        public static SingleInstanceProgram Create(string instanceId, string[] args)
         {
             if(instance != null)
             {
@@ -73,7 +73,7 @@ namespace SingleInstanceProgramNS
                 using (var server = new NamedPipeServerStream(_instanceId, PipeDirection.InOut))
                 {
                     server.WaitForConnection();
-                    using (var reader = new StreamReader(server, Encoding.UTF8, leaveOpen: true))
+                    using (var reader = new StreamReader(server))
                     {
                         string? message = reader.ReadLine();
                         if (message != null)
@@ -108,7 +108,7 @@ namespace SingleInstanceProgramNS
                         writer.WriteLine(string.Join(" ", args));
                         writer.Flush();
                     }
-                    using (var reader = new StreamReader(client, Encoding.UTF8))
+                    using (var reader = new StreamReader(client))
                     {
                         string? message = reader.ReadLine();
                         if (message != null)
