@@ -79,12 +79,12 @@ namespace SingleInstanceProgramNS
                         if (message != null)
                         {
                             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs();
-                            eventArgs.Message = message.Split();
+                            eventArgs.Message = message.Split("~#$");
                             Action<string[]> s = (string[] args) => 
                             {
                                 using (var writer = new StreamWriter(server))
                                 {
-                                    writer.WriteLine(string.Join(" ", args));
+                                    writer.WriteLine(string.Join("~#$", args));
                                     writer.Flush();
                                 }
                             };
@@ -105,7 +105,7 @@ namespace SingleInstanceProgramNS
                     client.Connect(200);
                     using (var writer = new StreamWriter(client, leaveOpen: true))
                     {
-                        writer.WriteLine(string.Join(" ", args));
+                        writer.WriteLine(string.Join("~#$", args));
                         writer.Flush();
                     }
                     using (var reader = new StreamReader(client))
@@ -114,7 +114,7 @@ namespace SingleInstanceProgramNS
                         if (message != null)
                         {
                             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs();
-                            eventArgs.Message = message.Split();
+                            eventArgs.Message = message.Split("~#$");
                             OnMessageReceivedFromFirstInstance(eventArgs);
                         }
                     }
