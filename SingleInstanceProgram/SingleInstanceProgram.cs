@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SingleInstanceProgramNS
 {
-    class SingleInstanceProgram
+    public class SingleInstanceProgram
     {
         private readonly string _instanceId;
         private Mutex? mutex = null;
