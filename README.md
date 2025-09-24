@@ -98,4 +98,4 @@ Events (MessageReceivedFromOtherInstance and MessageReceivedFromFirstInstance) a
 - How to use named mutexes to manage single-instance enforcement.
 - How to use named pipes with StreamReader/StreamWriter for IPC.
 - How to expose a callback function in event args without exposing internal state (`RespondToOtherSender`).
-- How to implement a singleton factory method that takes parameters safely.
+- How to implement a singleton pattern that takes parameters safely.
