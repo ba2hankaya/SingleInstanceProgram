@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.Design;
-using System.Diagnostics.Tracing;
-using System.IO.Pipes;
-using System.Text;
+﻿using System.IO.Pipes;
 
 namespace SingleInstanceProgramNS
 {
@@ -65,7 +62,6 @@ namespace SingleInstanceProgramNS
                 SendToFirstInstance(_argsToBeSentToFirstProgramInstance);
                 Environment.Exit(0);
             }
-
             Console.WriteLine("This is the first instance of the application.");
             Thread listenerThread = new Thread(ListenForClients);
             listenerThread.IsBackground = true;
