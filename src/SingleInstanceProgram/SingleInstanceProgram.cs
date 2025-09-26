@@ -68,6 +68,13 @@ namespace SingleInstanceProgramNS
             listenerThread.Start();
         }
 
+        public void Stop()
+        {
+            if (_mutex != null)
+            {
+                _mutex.ReleaseMutex();
+            }
+        }
         /* The method for the listener thread. Opens a two-way named pipe server stream with _instanceId, and checks for connections from other instances of the program forever.
          * Once a connection is received, it invokes the MessageReceivedFromOtherInstance event, exposing the received message and a function for responding back to the connecting instance as the arguments of the event.
         */

@@ -54,3 +54,5 @@ ProcessArgsFirstInstance(args);
 
 //First instance waits before quitting for testing
 Console.ReadLine();
+
+s.Stop();
