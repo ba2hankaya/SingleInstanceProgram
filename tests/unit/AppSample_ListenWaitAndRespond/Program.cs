@@ -8,6 +8,7 @@ void s_MessageReceivedFromOtherInstance(object? sender, MessageReceivedEventArgs
     {
         string[] toSend = ProcessArgsFirstInstance(e.Message).ToArray();
         //Respond to the sender instance
+        Thread.Sleep(2000);
         e.RespondToOtherSender?.Invoke(toSend);
     }
 }
