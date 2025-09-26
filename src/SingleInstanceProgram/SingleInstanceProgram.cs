@@ -68,6 +68,7 @@ namespace SingleInstanceProgramNS
             listenerThread.Start();
         }
 
+        //Shouldn't be needed for use in windows since it clears associated named mutex with a process automatically and mutex lasts until the process ends. Added for testing.
         public void Stop()
         {
             if (_mutex != null)
