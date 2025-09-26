@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace SingleInstanceProgramTests
 {
@@ -40,18 +41,22 @@ namespace SingleInstanceProgramTests
         }
 
         /*
-         * KNOWN ISSUE: When running the tests, sometimes the test will hang. The issue is not consistent therefore I think it is about the process creation in the tests rather than the class itself. Still working on it.
+         * FIXED ISSUE: When running the tests, sometimes the test will hang. The issue is not consistent therefore I think it is about the process creation in the tests rather than the class itself.
+         * What the issue was: StartProcess gives the command to start a process but doesn't wait until the process starts. So if two processes were started consecutively, sometimes the second process would
+         * start before the first one, becoming the first instance. And since the secondary process doesn't receive the exit code, it would then run forever.
+         * Fix: Added a small delay after creating the first process in the test cases to ensure the process starts before the next line of code is executed.
          * IMPORTANT: Same argname should be used for both GenerateXInstanceArgsAndExpected methods for correct results.
          */
 
         [TestMethod]
-        public void ListenProcessRespond2Instances()
+        public async Task ListenProcessRespond2Instances()
         {
             ClearProcessByName("ListenAndRespond");
             string argName = "arg";
             KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 1, secondaryInstanceArgCount: 3);
             KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 3, instanceNumber: 1);
             Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
+            await Task.Delay(100);
             Process secondInstance = StartProcess("ListenAndRespond", secondInstanceIO.Key);
 
             secondInstance.WaitForExit();
@@ -69,7 +74,7 @@ namespace SingleInstanceProgramTests
         }
 
         [TestMethod]
-        public void ListenProcessRespond10Instances()
+        public async Task ListenProcessRespond10Instances()
         {
             ClearProcessByName("ListenAndRespond");
 
@@ -77,6 +82,7 @@ namespace SingleInstanceProgramTests
 
             KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 10, secondaryInstanceArgCount: 5, firstInstanceId: 0);
             Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
+            await Task.Delay(100);
             for (int i = 0; i < 10; i++)
             {
                 KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 5, instanceNumber: i + 1);
