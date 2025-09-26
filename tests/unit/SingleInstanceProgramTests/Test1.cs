@@ -46,7 +46,7 @@ namespace SingleInstanceProgramTests
                 KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 1, secondaryInstanceArgCount: 3);
                 KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 3, instanceNumber: 1);
                 Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
-                Thread.Sleep(100);
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
                 Process secondInstance = StartProcess("ListenAndRespond", secondInstanceIO.Key);
 
                 secondInstance.WaitForExit();
@@ -67,15 +67,15 @@ namespace SingleInstanceProgramTests
             public void ListenProcessRespondTo10Instances()
             {
                 string argName = "arg";
-
-                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 10, secondaryInstanceArgCount: 5, firstInstanceId: 0);
+                int secondaryInstanceCount = 10;
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: secondaryInstanceCount, secondaryInstanceArgCount: 5, firstInstanceId: 0);
                 Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
-                Thread.Sleep(100);
-                for (int i = 0; i < 10; i++)
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
+                for (int i = 0; i < secondaryInstanceCount; i++)
                 {
                     KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 5, instanceNumber: i + 1);
                     Process secondaryInstance = StartProcess("ListenAndRespond", secondaryInstanceIO.Key);
-                    if (firstInstance.HasExited) { break; }
+                    Assert.IsFalse(firstInstance.HasExited);
                     secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
 
                     Assert.AreEqual(ReadOutput(secondaryInstance), secondaryInstanceIO.Value);
@@ -104,7 +104,7 @@ namespace SingleInstanceProgramTests
                 KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 1, secondaryInstanceArgCount: 3);
                 KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 3, instanceNumber: 1);
                 Process firstInstance = StartProcess("ListenWaitAndRespond", firstInstanceIO.Key);
-                Thread.Sleep(100);
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
                 Process secondInstance = StartProcess("ListenWaitAndRespond", secondInstanceIO.Key);
 
                 secondInstance.WaitForExit();
@@ -126,11 +126,11 @@ namespace SingleInstanceProgramTests
             public void ListenLongProcessRespondTo10Instances()
             {
                 string argName = "arg";
-
-                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 10, secondaryInstanceArgCount: 5, firstInstanceId: 0);
+                int secondaryInstanceCount = 10;
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: secondaryInstanceCount, secondaryInstanceArgCount: 5, firstInstanceId: 0);
                 Process firstInstance = StartProcess("ListenWaitAndRespond", firstInstanceIO.Key);
-                Thread.Sleep(100);
-                for (int i = 0; i < 10; i++)
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
+                for (int i = 0; i < secondaryInstanceCount; i++)
                 {
                     KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 5, instanceNumber: i + 1);
                     Process secondaryInstance = StartProcess("ListenWaitAndRespond", secondaryInstanceIO.Key);
