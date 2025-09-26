@@ -8,6 +8,8 @@ namespace SingleInstanceProgramNS
         private Mutex? _mutex;
         private static SingleInstanceProgram? _singletonInstance = null;
         private string[] _argsToBeSentToFirstProgramInstance; //Stores the data passed to the constructor of an instance of this class. This will be sent by secondary instances of the program to the first instance of the program.
+        Thread? _listenerThread = null;
+        CancellationTokenSource? _cancellationTokenSource = null;
 
         /// <summary>
         /// Creates initial instance of the class. instanceId takes a unique id to be used in named mutex and pipe server. args takes the data to be sent from additional instances of the program to the initial one.
@@ -63,41 +65,53 @@ namespace SingleInstanceProgramNS
                 Environment.Exit(0);
             }
             Console.WriteLine("This is the first instance of the application.");
-            Thread listenerThread = new Thread(ListenForClients);
-            listenerThread.IsBackground = true;
-            listenerThread.Start();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _listenerThread = new Thread(() => ListenForClients(_cancellationTokenSource.Token));
+            _listenerThread.IsBackground = true;
+            _listenerThread.Start();
         }
 
-        //Shouldn't be needed for use in windows since it clears associated named mutex with a process automatically and mutex lasts until the process ends. Added for testing.
+        /// <summary>
+        /// Stops the background thread for listening to incomming connections, releases and disposes of named mutex which is used to establish single instance behaviour.
+        /// </summary>
         public void Stop()
         {
             if (_mutex != null)
             {
                 _mutex.ReleaseMutex();
+                _mutex.Dispose();
+            }
+
+            if( _listenerThread != null && _cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
             }
         }
         /* The method for the listener thread. Opens a two-way named pipe server stream with _instanceId, and checks for connections from other instances of the program forever.
          * Once a connection is received, it invokes the MessageReceivedFromOtherInstance event, exposing the received message and a function for responding back to the connecting instance as the arguments of the event.
         */
-        private void ListenForClients()
+        private void ListenForClients(CancellationToken cancellationToken)
         {
-            while (true)
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                using (var server = new NamedPipeServerStream(_instanceId, PipeDirection.InOut))
+                using var server = new NamedPipeServerStream(_instanceId, PipeDirection.InOut);
+                cancellationToken.Register(() => { server.Dispose(); });
+                try
                 {
                     server.WaitForConnection();
-                    using (var reader = new StreamReader(server))
+                    using (var reader = new StreamReader(server, leaveOpen: true)) //leave the stream open, let server handle disposing of the stream
                     {
                         string? message = reader.ReadLine();
                         if (message != null)
                         {
                             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs();
                             eventArgs.Message = message.Split("~#$"); //use a special key for splitting and joining messages while communicating so strings with whitespaces can be sent as is.
-                            
+
                             //This function is for writing back to the connecting secondary instance. Done as a lambda action so that the writer stream is not exposed to the user of the library.
-                            Action<string[]> s = (string[] args) => 
+                            Action<string[]> s = (string[] args) =>
                             {
-                                using (var writer = new StreamWriter(server))
+                                using (var writer = new StreamWriter(server, leaveOpen: true)) //leave the stream open, let server handle disposing of the stream
                                 {
                                     writer.WriteLine(string.Join("~#$", args));  //use a special key for splitting and joining messages while communicating so strings with whitespaces can be sent as is.
                                     writer.Flush();
@@ -107,6 +121,10 @@ namespace SingleInstanceProgramNS
                             OnMessageReceivedFromOtherInstance(eventArgs);
                         }
                     }
+                }
+                catch (ObjectDisposedException) //if the cancellation token is received and server operation is called, the disposed server will throw object disposed exception. If no server operation is called, the loop condition will return false.
+                {
+                    break;
                 }
             }
         }
@@ -122,12 +140,12 @@ namespace SingleInstanceProgramNS
                 using (var client = new NamedPipeClientStream(".",_instanceId,PipeDirection.InOut))
                 {
                     client.Connect(200);
-                    using (var writer = new StreamWriter(client, leaveOpen: true)) //leave the stream open so that the reader can be initialized on the same stream.
+                    using (var writer = new StreamWriter(client, leaveOpen: true)) //leave the stream open, let client handle disposing of the stream
                     {
                         writer.WriteLine(string.Join("~#$", args));  //use a special key for splitting and joining messages while communicating so strings with whitespaces can be sent as is.
                         writer.Flush();
                     }
-                    using (var reader = new StreamReader(client))
+                    using (var reader = new StreamReader(client, leaveOpen: true)) //leave the stream open, let client handle disposing of the stream
                     {
                         string? message = reader.ReadLine();
                         if (message != null)
