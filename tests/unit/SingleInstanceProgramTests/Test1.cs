@@ -41,64 +41,68 @@ namespace SingleInstanceProgramTests
 
         /*
          * KNOWN ISSUE: When running the tests, sometimes the test will hang. The issue is not consistent therefore I think it is about the process creation in the tests rather than the class itself. Still working on it.
+         * IMPORTANT: Same argname should be used for both GenerateXInstanceArgsAndExpected methods for correct results.
          */
 
         [TestMethod]
         public void ListenProcessRespond2Instances()
         {
             ClearProcessByName("ListenAndRespond");
-            Process firstInstance = StartProcess("ListenAndRespond", MultipleInstancesGenerationHelper.GenerateArgumentString(argName: "arg", argCount: 3, instanceNumber: 0));
-            Process secondInstance = StartProcess("ListenAndRespond", MultipleInstancesGenerationHelper.GenerateArgumentString(argName: "arg", argCount:3, instanceNumber: 1));
-            string expectedFirst = MultipleInstancesGenerationHelper.ConstructExpectedByFirstString(argName: "arg", firstInstanceArgCount: 3, secondaryInstanceCount:1 ,secondaryInstanceArgCount: 3);
-            string expectedSecond = MultipleInstancesGenerationHelper.ConstructExpectedBySecondString(argName: "arg", argCount: 3, instanceNumber: 1);
+            string argName = "arg";
+            KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 1, secondaryInstanceArgCount: 3);
+            KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 3, instanceNumber: 1);
+            Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
+            Process secondInstance = StartProcess("ListenAndRespond", secondInstanceIO.Key);
 
             secondInstance.WaitForExit();
 
             firstInstance.StandardInput.WriteLine("exit");
             string receivedFirst = ReadOutput(firstInstance);
+            firstInstance.WaitForExit();
             firstInstance.Dispose();
 
             string receivedSecond = ReadOutput(secondInstance);
             secondInstance.Dispose();
 
-            Assert.AreEqual(expectedFirst, receivedFirst);
-            Assert.AreEqual(expectedSecond, receivedSecond);
+            Assert.AreEqual(firstInstanceIO.Value, receivedFirst);
+            Assert.AreEqual(secondInstanceIO.Value, receivedSecond);
         }
 
         [TestMethod]
         public void ListenProcessRespond10Instances()
         {
             ClearProcessByName("ListenAndRespond");
-            Process firstInstance = StartProcess("ListenAndRespond", MultipleInstancesGenerationHelper.GenerateArgumentString(argName: "arg", argCount:3, instanceNumber: 0));
-            List<string> secondaryOutputs = new();
+
+            string argName = "arg";
+
+            KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: 10, secondaryInstanceArgCount: 5, firstInstanceId: 0);
+            Process firstInstance = StartProcess("ListenAndRespond", firstInstanceIO.Key);
             for (int i = 0; i < 10; i++)
             {
-                Process secondaryInstance = StartProcess("ListenAndRespond", MultipleInstancesGenerationHelper.GenerateArgumentString(argName: "arg", argCount:5, instanceNumber: i+1));
+                KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 5, instanceNumber: i + 1);
+                Process secondaryInstance = StartProcess("ListenAndRespond", secondaryInstanceIO.Key);
                 if (firstInstance.HasExited) { break; }
                 secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
-                secondaryOutputs.Add(ReadOutput(secondaryInstance));
+
+                Assert.AreEqual(ReadOutput(secondaryInstance), secondaryInstanceIO.Value);
                 secondaryInstance.Dispose();
             }
 
             firstInstance.StandardInput.WriteLine("exit");
             string receivedFirst = ReadOutput(firstInstance);
+            firstInstance.WaitForExit();
             firstInstance.Dispose();
 
-            string expectedFirst = MultipleInstancesGenerationHelper.ConstructExpectedByFirstString(argName: "arg", firstInstanceArgCount: 3, secondaryInstanceCount: 10, secondaryInstanceArgCount: 5, firstInstanceId: 0);
+            string expectedFirst = firstInstanceIO.Value;
 
             Assert.AreEqual(expectedFirst, receivedFirst);
-            for(int i = 0; i < 10; i++)
-            {
-                string receivedSecondary = secondaryOutputs[i];
-                Assert.AreEqual(MultipleInstancesGenerationHelper.ConstructExpectedBySecondString(argName: "arg", argCount: 5, instanceNumber: i+1), receivedSecondary);
-            }
         }
     }
     
     public static class MultipleInstancesGenerationHelper
     {
         //Assumes the secondary instances will start with ID 1 and appear in order increasingly
-        public static string ConstructExpectedByFirstString(string argName, int firstInstanceArgCount, int secondaryInstanceCount = -1, int secondaryInstanceArgCount = -1, int firstInstanceId = 0)
+        private static string ConstructExpectedByFirstString(string argName, int firstInstanceArgCount, int secondaryInstanceCount = -1, int secondaryInstanceArgCount = -1, int firstInstanceId = 0)
         {
             const string InstNoPH = "{instancenum}";
             const string ArgNamePH = "{argname}";
@@ -132,7 +136,7 @@ namespace SingleInstanceProgramTests
             return result;
         }
 
-        public static string ConstructExpectedBySecondString(string argName, int argCount, int instanceNumber)
+        private static string ConstructExpectedBySecondString(string argName, int argCount, int instanceNumber)
         {
             string result = "";
 
@@ -144,7 +148,7 @@ namespace SingleInstanceProgramTests
             return result;
         }
 
-        public static string GenerateArgumentString(string argName, int argCount, int instanceNumber)
+        private static string GenerateArgumentString(string argName, int argCount, int instanceNumber)
         {
             List<string> result = new();
             for (int i = 0; i < argCount; i++)
@@ -155,6 +159,19 @@ namespace SingleInstanceProgramTests
             return String.Join(" ", result);
         }
 
+        public static KeyValuePair<string , string> GenerateFirstInstanceArgsAndExpected(string argName, int firstInstanceArgCount, int secondaryInstanceCount = -1, int secondaryInstanceArgCount = -1, int firstInstanceId = 0)
+        {
+            string args = GenerateArgumentString(argName, firstInstanceArgCount, firstInstanceId);
+            string expected = ConstructExpectedByFirstString(argName, firstInstanceArgCount, secondaryInstanceCount, secondaryInstanceArgCount, firstInstanceId);
+            return new KeyValuePair<string, string>(args, expected);
+        }
+
+        public static KeyValuePair<string, string> GenerateSecondInstanceArgsAndExpected(string argName, int argCount, int instanceNumber)
+        {
+            string args = GenerateArgumentString(argName, argCount, instanceNumber);
+            string expected = ConstructExpectedBySecondString(argName, argCount, instanceNumber);
+            return new KeyValuePair<string, string>(args,expected);
+        }
         
     }
 }
