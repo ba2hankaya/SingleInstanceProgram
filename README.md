@@ -3,15 +3,41 @@
 A helper class to ensure your program runs as a **single instance**.  
 Additional instances send their arguments to the first instance via IPC.  
 The first instance can optionally respond back to the secondary instances.
+Note: A thread is spawned for IPC.
 
 ---
 ## Usage
+
+### Installation Instructions
+
+#### Using .NET CLI
+
+```sh
+dotnet add package singleinstanceprogram
+```
+
+#### Using the Package Manager Console (Visual Studio)
+
+```powershell
+Install-Package SingleInstanceProgram
+```
+
+#### Using csproj
+
+Add the following to your project file:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="SingleInstanceProgram" />
+</ItemGroup>
+```
+
 ### Quick Start
 
 ```csharp
 using SingleInstanceProgramNS;
 
-// Create instance (uniqueId = app identifier, args = arguments from this process)
+// Create instance (uniqueId = app identifier, args = arguments secondary launches should send to the first instance)
 SingleInstanceProgram s = SingleInstanceProgram.Create("UniqueId", args);
 
 // Subscribe to events
@@ -65,14 +91,15 @@ Additional launches will pass their `args` to the first instance.
 2. Subscribe to events **before** calling `Start()`.  
 3. Call `Start()` → begins background thread for listening.  
 4. Manually process first-instance args (since no event fires for them).  
-5. (Optional) On shutdown, unsubscribe from events.  
+5. (Optional) On shutdown, unsubscribe from events.
+6. (Optional) Call `Stop()` to release named mutex + IPC channels
 
 ---
 
 ### Notes
 - Event handlers are invoked from a **background thread** — marshal back to the UI thread if needed.  
 - The `UniqueId` must be stable and unique per app; otherwise, instances may conflict.
-- The listening thread runs forever until the process exits.
+- The listening thread runs until either the process exits or `Stop()` is called. 
 
 ## How it's made
 
@@ -99,3 +126,5 @@ Events (MessageReceivedFromOtherInstance and MessageReceivedFromFirstInstance) a
 - How to use named pipes with StreamReader/StreamWriter for IPC.
 - How to expose a callback function in event args without exposing internal state (`RespondToOtherSender`).
 - How to implement a singleton pattern that takes parameters safely.
+- How to safely exit/abort a thread using cancellation tokens, including blocking threads
+- How to write integration unit tests.
