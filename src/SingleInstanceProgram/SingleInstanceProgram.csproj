@@ -4,6 +4,34 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>singleinstanceprogram</PackageId>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Single Instance Program</Title>
+    <Version>1.0.0</Version>
+    <Authors>ba2han</Authors>
+    <Description>A helper for making your program a single instance program and allows communication with secondary launches.</Description>
+    <Copyright>Copyright © 2025 ba2hankaya. Licensed under the MIT License.</Copyright>
+    <PackageProjectUrl>github.com/ba2hankaya/SingleInstanceProgram</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>github.com/ba2hankaya/SingleInstanceProgram</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>single instance;ipc;named mutex;named pipe;inter-process communication</PackageTags>
+    <PackageReleaseNotes>Added a stop function to manually stop and release single instance resources.
+Fixed unit tests failing bug.</PackageReleaseNotes>
+    <PackAsTool>True</PackAsTool>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
