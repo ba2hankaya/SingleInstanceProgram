@@ -36,6 +36,147 @@ namespace SingleInstanceProgramTests
          * Fix: Added a small delay after creating the first process in the test cases to ensure the process starts before the next line of code is executed.
          * IMPORTANT: Same argname should be used for both GenerateXInstanceArgsAndExpected methods for correct results.
          */
+
+        [TestClass]
+        public sealed class SampleApp_ListenTests
+        {
+            [TestMethod]
+            public void TestListen()
+            {
+                string argName = "arg";
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 5, secondaryInstanceCount: 1, secondaryInstanceArgCount: 10);
+                KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 10, instanceNumber: 1);
+                Process firstInstance = StartProcess("Listen", firstInstanceIO.Key);
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
+                Process secondInstance = StartProcess("Listen", secondInstanceIO.Key);
+
+                secondInstance.WaitForExit();
+                firstInstance.StandardInput.WriteLine("exit");
+                string receivedFirst = ReadOutput(firstInstance);
+                firstInstance.WaitForExit();
+                firstInstance.Dispose();
+
+                string receivedSecond = ReadOutput(secondInstance);
+                secondInstance.Dispose();
+
+                Assert.AreEqual(firstInstanceIO.Value, receivedFirst);
+                Assert.AreEqual(string.Empty, receivedSecond);
+            }
+
+            [TestMethod]
+            public void ListenTo10Instances()
+            {
+                string argName = "arg";
+                int secondaryInstanceCount = 10;
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: 3, secondaryInstanceCount: secondaryInstanceCount, secondaryInstanceArgCount: 7, firstInstanceId: 0);
+                Process firstInstance = StartProcess("Listen", firstInstanceIO.Key);
+                firstInstance.StandardOutput.ReadLine(); //wait for process to start by checking its output
+                for (int i = 0; i < secondaryInstanceCount; i++)
+                {
+                    KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: 7, instanceNumber: i + 1);
+                    Process secondaryInstance = StartProcess("Listen", secondaryInstanceIO.Key);
+                    Assert.IsFalse(firstInstance.HasExited);
+                    secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
+
+                    Assert.AreEqual(string.Empty, ReadOutput(secondaryInstance));
+                    secondaryInstance.Dispose();
+                }
+
+                firstInstance.StandardInput.WriteLine("exit");
+                string receivedFirst = ReadOutput(firstInstance);
+                firstInstance.WaitForExit();
+                firstInstance.Dispose();
+
+                string expectedFirst = firstInstanceIO.Value;
+
+                Assert.AreEqual(expectedFirst, receivedFirst);
+            }
+
+            [TestMethod]
+            public void TestListenToManyArgs()
+            {
+                string argName = "arg";
+                int firstInstanceArgCount = 1000;
+                int secondInstanceArgCount = 2000;
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: firstInstanceArgCount, secondaryInstanceCount: 1, secondaryInstanceArgCount: secondInstanceArgCount);
+                KeyValuePair<string, string> secondInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: secondInstanceArgCount, instanceNumber: 1);
+                Process firstInstance = StartProcess("Listen", firstInstanceIO.Key);
+                firstInstance.BeginOutputReadLine();
+                string[] receivedFirstArr = new string[1 + firstInstanceArgCount + secondInstanceArgCount];
+
+                int i = 0;
+                firstInstance.OutputDataReceived += (s, e) => //add event for handling reading output since the buffer gets filled and hangs with this much output otherwise.
+                {
+                    if (e.Data != null)
+                    {
+                        if(i != 0)
+                        {
+                            receivedFirstArr[i - 1] = e.Data;
+                        }
+                        i++;
+                    }
+                };
+                while (i == 0) { } //ensure the first process starts first
+
+                Process secondInstance = StartProcess("Listen", secondInstanceIO.Key);
+                secondInstance.WaitForExit();
+                firstInstance.StandardInput.WriteLine("exit");
+                firstInstance.WaitForExit();
+                firstInstance.Dispose();
+
+                string receivedSecond = ReadOutput(secondInstance);
+                secondInstance.Dispose();
+
+                string receivedFirst = string.Join("\r\n", receivedFirstArr);
+
+                Assert.AreEqual(firstInstanceIO.Value, receivedFirst);
+                Assert.AreEqual(string.Empty, receivedSecond);
+            }
+
+            [TestMethod]
+            public void TestListenTo10InstancesWithManyArgs()
+            {
+                string argName = "arg";
+                int firstInstanceArgCount = 1000;
+                int secondaryInstanceArgCount = 2000;
+                int secondaryInstanceCount = 10;
+                KeyValuePair<string, string> firstInstanceIO = MultipleInstancesGenerationHelper.GenerateFirstInstanceArgsAndExpected(argName, firstInstanceArgCount: firstInstanceArgCount, secondaryInstanceCount: secondaryInstanceCount, secondaryInstanceArgCount: secondaryInstanceArgCount);
+                Process firstInstance = StartProcess("Listen", firstInstanceIO.Key);
+                firstInstance.BeginOutputReadLine();
+                string[] receivedFirstArr = new string[1 + firstInstanceArgCount + secondaryInstanceArgCount * secondaryInstanceCount];
+
+                int i = 0;
+                firstInstance.OutputDataReceived += (s, e) => //add event for handling reading output since the buffer gets filled and hangs with this much output otherwise.
+                {
+                    if (e.Data != null)
+                    {
+                        if (i != 0)
+                        {
+                            receivedFirstArr[i - 1] = e.Data;
+                        }
+                        i++;
+                    }
+                };
+                while (i == 0) { } //ensure the first process starts first
+
+                for (int j = 0; j < secondaryInstanceCount; j++)
+                {
+                    KeyValuePair<string, string> secondaryInstanceIO = MultipleInstancesGenerationHelper.GenerateSecondInstanceArgsAndExpected(argName, argCount: secondaryInstanceArgCount, instanceNumber: j + 1);
+                    Process secondaryInstance = StartProcess("Listen", secondaryInstanceIO.Key);
+                    Assert.IsFalse(firstInstance.HasExited);
+                    secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
+
+                    Assert.AreEqual(string.Empty, ReadOutput(secondaryInstance));
+                    secondaryInstance.Dispose();
+                }
+                firstInstance.StandardInput.WriteLine("exit");
+                firstInstance.WaitForExit();
+                firstInstance.Dispose();
+                string receivedFirst = string.Join("\r\n", receivedFirstArr);
+                Assert.AreEqual(firstInstanceIO.Value, receivedFirst);
+            }
+
+        }
         [TestClass]
         public sealed class SampleApp_ListenAndRespondTests
         {
