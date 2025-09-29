@@ -64,7 +64,7 @@ namespace SingleInstanceProgramNS
                 SendToFirstInstance(_argsToBeSentToFirstProgramInstance);
                 Environment.Exit(0);
             }
-            Console.WriteLine("This is the first instance of the application.");
+            //Console.WriteLine("This is the first instance of the application.");
             _cancellationTokenSource = new CancellationTokenSource();
             _listenerThread = new Thread(() => ListenForClients(_cancellationTokenSource.Token));
             _listenerThread.IsBackground = true;
