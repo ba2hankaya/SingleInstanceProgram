@@ -11,14 +11,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SingleInstanceProgramTests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ListenWaitAndRespond", "tests\unit\AppSample_ListenWaitAndRespond\ListenWaitAndRespond.csproj", "{15A38B77-C940-1561-F04F-18D9F251FCF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Listen", "tests\unit\AppSample_Listen\Listen.csproj", "{7C0B7A2C-AA86-A942-0DBE-6275AC593684}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0E8C1F3-B078-9A87-523E-F328627D14F1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{85BB55D3-9EA1-8916-4CB7-C0FFB9DDCABE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{15A38B77-C940-1561-F04F-18D9F251FCF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15A38B77-C940-1561-F04F-18D9F251FCF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15A38B77-C940-1561-F04F-18D9F251FCF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C0B7A2C-AA86-A942-0DBE-6275AC593684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C0B7A2C-AA86-A942-0DBE-6275AC593684}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C0B7A2C-AA86-A942-0DBE-6275AC593684}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C0B7A2C-AA86-A942-0DBE-6275AC593684}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
