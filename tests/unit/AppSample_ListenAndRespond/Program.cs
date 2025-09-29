@@ -50,6 +50,7 @@ s.MessageReceivedFromOtherInstance += s_MessageReceivedFromOtherInstance;
 s.Start();
 
 //Since the initial instance of the program won't trigger MessageReceived event handler, run the function for processing args manually.
+Console.WriteLine("This is the first instance of the application.");
 ProcessArgsFirstInstance(args);
 
 //First instance waits before quitting for testing

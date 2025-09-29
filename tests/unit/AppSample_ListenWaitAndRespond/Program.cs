@@ -50,6 +50,7 @@ s.MessageReceivedFromOtherInstance += s_MessageReceivedFromOtherInstance;
 //Starts the single instance thread and can call functions that use events
 s.Start();
 
+Console.WriteLine("This is the first instance of the application.");
 //Since the initial instance of the program won't trigger MessageReceived event handler, run the function for processing args manually.
 ProcessArgsFirstInstance(args);
 

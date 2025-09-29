@@ -2,10 +2,11 @@
 
 namespace SingleInstanceProgramTests
 {
-    public class SingleInstanceProgramTests
+    public sealed class SingleInstanceProgramTests
     {
         const string AppNamePlaceholder = "{APPNAME}";
         const string Path = @$"..\..\..\..\AppSample_{AppNamePlaceholder}\bin\Debug\net8.0\{AppNamePlaceholder}.exe";
+        const string FirstProcessStartedMessage = "This is the first instance of the application.\r\n";
         static Process StartProcess(string sampleAppName, string arguments)
         {
             //* Create your Process
@@ -78,7 +79,7 @@ namespace SingleInstanceProgramTests
                     Assert.IsFalse(firstInstance.HasExited);
                     secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
 
-                    Assert.AreEqual(ReadOutput(secondaryInstance), secondaryInstanceIO.Value);
+                    Assert.AreEqual(secondaryInstanceIO.Value, ReadOutput(secondaryInstance));
                     secondaryInstance.Dispose();
                 }
 
@@ -137,7 +138,7 @@ namespace SingleInstanceProgramTests
                     if (firstInstance.HasExited) { break; }
                     secondaryInstance.WaitForExit(); //wait for process to complete because otherwise n+1 th process can run before the nth process because of process creation time.
 
-                    Assert.AreEqual(ReadOutput(secondaryInstance), secondaryInstanceIO.Value);
+                    Assert.AreEqual(secondaryInstanceIO.Value, ReadOutput(secondaryInstance));
                     secondaryInstance.Dispose();
                 }
 
@@ -160,12 +161,10 @@ namespace SingleInstanceProgramTests
             const string InstNoPH = "{instancenum}";
             const string ArgNamePH = "{argname}";
             const string ArgNoPH = "{argnum}";
-            const string ExpectedFirstInstanceOutputStartTemplate = "This is the first instance of the application.\r\n";
             const string ExpectedFirstInstanceOutputBodyTemplate = "I{instancenum}_{argname}{argnum} processed by first\r\n";
 
 
             string result = "";
-            result += ExpectedFirstInstanceOutputStartTemplate;
 
             for (int i = 0; i < firstInstanceArgCount; i++)
             {
