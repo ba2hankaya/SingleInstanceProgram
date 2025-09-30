@@ -41,12 +41,15 @@ using SingleInstanceProgramNS;
 SingleInstanceProgram s = SingleInstanceProgram.Create("UniqueId", args);
 
 // Subscribe to events
+
+//This event will be ran by secondary instances when the first instance responds
 s.MessageReceivedFromFirstInstance += (sender, e) =>
 {
     if (e.Message != null)
         Console.WriteLine("From first instance: " + string.Join(" ", e.Message));
 };
 
+//This event will be ran by the first instance when it receives data from secondary instances
 s.MessageReceivedFromOtherInstance += (sender, e) =>
 {
     if (e.Message != null)
@@ -57,9 +60,9 @@ s.MessageReceivedFromOtherInstance += (sender, e) =>
 };
 
 // Start background IPC thread
-s.Start();
+s.Start(); //This line is where secondary instances send their data to first then quit, following code will only be executed by the first instance.(your main program)
 
-// Process this instance’s args manually (first instance only)
+// Process this instance’s args manually if you wish to (first instance only)
 foreach (var arg in args)
     Console.WriteLine(arg);
 ```
